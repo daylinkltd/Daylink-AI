@@ -71,7 +71,7 @@ export function Sidebar({
     messages: Message[];
   }[] => {
     const chats = Object.keys(localStorage).filter((key) =>
-      key.startsWith("chat_")
+      key.startsWith("chat_"),
     );
 
     if (chats.length === 0) {
@@ -117,14 +117,14 @@ export function Sidebar({
           variant="ghost"
           className="flex justify-between w-full h-14 text-sm xl:text-lg font-normal items-center "
         >
-          <div className="flex gap-3 items-center ">
+          <div className="flex  gap-3 items-center ">
             {!isCollapsed && !isMobile && (
               <Image
-                src="/ollama.png"
+                src="/favicon.png"
                 alt="AI"
                 width={28}
                 height={28}
-                className="dark:invert hidden 2xl:block"
+                className="light:invert rounded-sm px-1 hidden 2xl:block bg-white"
               />
             )}
             New chat
@@ -147,7 +147,7 @@ export function Sidebar({
                       [buttonVariants({ variant: "ghost" })]:
                         chatId.substring(5) !== selectedChatId,
                     },
-                    "flex justify-between w-full h-14 text-base font-normal items-center "
+                    "flex justify-between w-full h-14 text-base font-normal items-center ",
                   )}
                 >
                   <div className="flex gap-3 items-center truncate">

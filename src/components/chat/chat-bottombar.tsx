@@ -60,14 +60,14 @@ export default function ChatBottombar({
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 1 }}
           transition={{
-            opacity: { duration: 0.05 },
-            layout: {
-              type: "spring",
-              bounce: 0.15,
-            },
+            opacity: { duration: 0.1 },
+            y: { duration: 0.2, type: "tween" },
           }}
         >
-          <form onSubmit={handleSubmit} className="w-full items-center flex relative gap-2">
+          <form
+            onSubmit={handleSubmit}
+            className="w-full items-center flex relative gap-2"
+          >
             <div className="flex">
               <Link
                 href="#"
@@ -79,25 +79,35 @@ export default function ChatBottombar({
               </Link>
             </div>
 
-            <TextareaAutosize
-              autoComplete="off"
+            <Textarea
+              autoComplete="on"
               value={input}
-              ref={inputRef}
-              onKeyDown={handleKeyPress}
               onChange={handleInputChange}
+              onKeyDown={handleKeyPress}
               name="message"
               placeholder="Ask Daylink AI anything..."
-              className="border-input max-h-20 px-5 py-4 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 w-full border rounded-full flex items-center h-14 resize-none overflow-hidden dark:bg-card/35"
+              className="border-input px-5 py-3 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 w-full border rounded-md flex items-center resize-y dark:bg-card/35"
             />
-              {!isLoading ? (
-                <Button className="shrink-0" variant="secondary" size="icon" type="submit" disabled={isLoading || !input.trim()}>
+            {!isLoading ? (
+              <Button
+                className="shrink-0"
+                variant="secondary"
+                size="icon"
+                type="submit"
+                disabled={isLoading || !input.trim()}
+              >
                 <PaperPlaneIcon className=" w-6 h-6 text-muted-foreground" />
               </Button>
-              ) : (
-                <Button className="shrink-0" variant="secondary" size="icon" onClick={stop} >
-              <StopIcon className="w-6 h-6  text-muted-foreground" />
-            </Button>
-              )}
+            ) : (
+              <Button
+                className="shrink-0"
+                variant="secondary"
+                size="icon"
+                onClick={stop}
+              >
+                <StopIcon className="w-6 h-6  text-muted-foreground" />
+              </Button>
+            )}
           </form>
         </motion.div>
       </AnimatePresence>

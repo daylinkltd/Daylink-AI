@@ -1,20 +1,12 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
-
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "../ui/button";
 import { CaretSortIcon, HamburgerMenuIcon } from "@radix-ui/react-icons";
 import { Sidebar } from "../sidebar";
@@ -28,49 +20,50 @@ interface ChatTopbarProps {
   messages: Message[];
 }
 
-export default function ChatTopbar({
+const ChatTopbar: React.FC<ChatTopbarProps> = ({
   setSelectedModel,
   isLoading,
   chatId,
   messages,
-}: ChatTopbarProps) {
-  const [models, setModels] = React.useState<string[]>([]);
-  const [open, setOpen] = React.useState(false);
-  const [currentModel, setCurrentModel] = React.useState<string | null>(null);
+}) => {
+  const [models, setModels] = useState<string[]>([]);
+  const [open, setOpen] = useState(false);
+  const [currentModel, setCurrentModel] = useState<string | null>(null);
 
   useEffect(() => {
     setCurrentModel(getSelectedModel());
 
-    const env = process.env.NODE_ENV;
-
     const fetchModels = async () => {
-      if (env === "production") {
-        const fetchedModels = await fetch(process.env.NEXT_PUBLIC_OLLAMA_URL + "/api/tags");
-        const json = await fetchedModels.json();
-        const apiModels = json.models.map((model : any) => model.name);
-        setModels([...apiModels]);
-      } 
-      else {
-        const fetchedModels = await fetch("/api/tags") 
-        const json = await fetchedModels.json();
-        const apiModels = json.models.map((model : any) => model.name);
-        setModels([...apiModels]);
-    }
-    }
+      const env = process.env.NODE_ENV;
+      const apiUrl =
+        env === "production"
+          ? process.env.NEXT_PUBLIC_OLLAMA_URL + "/api/tags"
+          : "/api/tags";
+
+      try {
+        const response = await fetch(apiUrl);
+        const json = await response.json();
+        const apiModels = json.models.map((model: any) => model.name);
+        setModels(apiModels);
+      } catch (error) {
+        console.error("Failed to fetch models:", error);
+      }
+    };
+
     fetchModels();
   }, []);
 
   const handleModelChange = (model: string) => {
     setCurrentModel(model);
     setSelectedModel(model);
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       localStorage.setItem("selectedModel", model);
     }
     setOpen(false);
   };
 
   return (
-    <div className="w-full flex px-4 py-6  items-center justify-between lg:justify-center ">
+    <div className="w-full flex px-4 py-6 items-center justify-between lg:justify-center">
       <Sheet>
         <SheetTrigger>
           <HamburgerMenuIcon className="lg:hidden w-5 h-5" />
@@ -105,15 +98,13 @@ export default function ChatTopbar({
                 key={model}
                 variant="ghost"
                 className="w-full"
-                onClick={() => {
-                  handleModelChange(model);
-                }}
+                onClick={() => handleModelChange(model)}
               >
                 {model}
               </Button>
             ))
           ) : (
-            <Button variant="ghost" disabled className=" w-full">
+            <Button variant="ghost" disabled className="w-full">
               No models available
             </Button>
           )}
@@ -121,4 +112,6 @@ export default function ChatTopbar({
       </Popover>
     </div>
   );
-}
+};
+
+export default ChatTopbar;

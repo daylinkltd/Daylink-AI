@@ -1,11 +1,12 @@
-import { Message, useChat } from "ai/react";
-import React, { useRef, useEffect } from "react";
-import { motion } from "framer-motion";
+"use client";
+import React, { useRef, useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
-import { ChatProps } from "./chat";
 import Image from "next/image";
 import CodeDisplayBlock from "../code-display-block";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import { ChatProps } from "./chat";
 
 export default function ChatList({
   messages,
@@ -18,12 +19,14 @@ export default function ChatList({
   loadingSubmit,
 }: ChatProps) {
   const bottomRef = useRef<HTMLDivElement>(null);
-  const [name, setName] = React.useState<string>("");
-  const [localStorageIsLoading, setLocalStorageIsLoading] =
-    React.useState(true);
+  const [name, setName] = useState<string>("");
+  const [localStorageIsLoading, setLocalStorageIsLoading] = useState(true);
+  const [isAutoScroll, setIsAutoScroll] = useState(true);
 
   const scrollToBottom = () => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+    if (isAutoScroll) {
+      bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+    }
   };
 
   useEffect(() => {
@@ -38,16 +41,25 @@ export default function ChatList({
     }
   }, []);
 
+  const handleScroll = () => {
+    const scroller = document.getElementById("scroller");
+    if (scroller) {
+      const isAtBottom =
+        scroller.scrollHeight - scroller.scrollTop === scroller.clientHeight;
+      setIsAutoScroll(isAtBottom);
+    }
+  };
+
   if (messages.length === 0) {
     return (
       <div className="w-full h-full flex justify-center items-center">
         <div className="flex flex-col gap-4 items-center">
           <Image
-            src="/ollama.png"
+            src="/logoLight.png"
             alt="AI"
-            width={60}
-            height={60}
-            className="h-20 w-14 object-contain dark:invert"
+            width={120}
+            height={120}
+            className="h-50 w-34 object-contain"
           />
           <p className="text-center text-lg text-muted-foreground">
             How can I help you today?
@@ -61,30 +73,19 @@ export default function ChatList({
     <div
       id="scroller"
       className="w-full overflow-y-scroll overflow-x-hidden h-full justify-end"
+      onScroll={handleScroll}
     >
       <div className="w-full flex flex-col overflow-x-hidden overflow-y-hidden min-h-full justify-end">
         {messages.map((message, index) => (
-          <motion.div
+          <div
             key={index}
-            layout
-            initial={{ opacity: 0, scale: 1, y: 20, x: 0 }}
-            animate={{ opacity: 1, scale: 1, y: 0, x: 0 }}
-            exit={{ opacity: 0, scale: 1, y: 20, x: 0 }}
-            transition={{
-              opacity: { duration: 0.1 },
-              layout: {
-                type: "spring",
-                bounce: 0.3,
-                duration: messages.indexOf(message) * 0.05 + 0.2,
-              },
-            }}
             className={cn(
-              "flex flex-col gap-2 p-4 whitespace-pre-wrap",
-              message.role === "user" ? "items-end" : "items-start"
+              "flex flex-col gap-2 p-4",
+              message.role === "user" ? "items-end" : "items-start",
             )}
           >
             <div className="flex gap-3 items-center">
-              {message.role === "user" && (
+              {message.role === "user" ? (
                 <div className="flex items-end gap-3">
                   <span className="bg-accent p-3 rounded-md max-w-xs sm:max-w-2xl overflow-x-auto">
                     {message.content}
@@ -102,33 +103,40 @@ export default function ChatList({
                     </AvatarFallback>
                   </Avatar>
                 </div>
-              )}
-              {message.role === "assistant" && (
+              ) : (
                 <div className="flex items-end gap-2">
                   <Avatar className="flex justify-start items-center">
                     <AvatarImage
-                      src="/ollama.png"
+                      src="/favicon.png"
                       alt="AI"
                       width={6}
                       height={6}
-                      className="object-contain dark:invert"
+                      className="object-contain dark:light bg-white"
                     />
                   </Avatar>
                   <span className="bg-accent p-3 rounded-md max-w-xs sm:max-w-2xl overflow-x-auto">
-                    {/* Check if the message content contains a code block */}
-                    {message.content.split("```").map((part, index) => {
-                      if (index % 2 === 0) {
-                        return (
-                          <React.Fragment key={index}>{part}</React.Fragment>
-                        );
-                      } else {
-                        return (
-                          <pre className="whitespace-pre-wrap" key={index}>
-                            <CodeDisplayBlock code={part} lang="" />
-                          </pre>
-                        );
-                      }
-                    })}
+                    <ReactMarkdown
+                      remarkPlugins={[remarkGfm]}
+                      components={{
+                        code({ node, inline, className, children, ...props }) {
+                          const match = /language-(\w+)/.exec(className || "");
+                          return !inline && match ? (
+                            <pre className="whitespace-pre-wrap">
+                              <CodeDisplayBlock
+                                code={String(children).replace(/\n$/, "")}
+                                lang={match[1]}
+                              />
+                            </pre>
+                          ) : (
+                            <code className={className} {...props}>
+                              {children}
+                            </code>
+                          );
+                        },
+                      }}
+                    >
+                      {message.content}
+                    </ReactMarkdown>
                     {isLoading &&
                       messages.indexOf(message) === messages.length - 1 && (
                         <span className="animate-pulse" aria-label="Typing">
@@ -139,25 +147,25 @@ export default function ChatList({
                 </div>
               )}
             </div>
-          </motion.div>
+          </div>
         ))}
         {loadingSubmit && (
           <div className="flex pl-4 pb-4 gap-2 items-center">
             <Avatar className="flex justify-start items-center">
               <AvatarImage
-                src="/ollama.png"
+                src="/favicon.png"
                 alt="AI"
                 width={6}
                 height={6}
-                className="object-contain dark:invert"
+                className="object-contain light:invert bg-white"
               />
             </Avatar>
             <div className="bg-accent p-3 rounded-md max-w-xs sm:max-w-2xl overflow-x-auto">
-            <div className="flex gap-1">
-              <span className="size-1.5 rounded-full bg-slate-700 motion-safe:animate-[bounce_1s_ease-in-out_infinite] dark:bg-slate-300"></span>
-              <span className="size-1.5 rounded-full bg-slate-700 motion-safe:animate-[bounce_0.5s_ease-in-out_infinite] dark:bg-slate-300"></span>
-              <span className="size-1.5 rounded-full bg-slate-700 motion-safe:animate-[bounce_1s_ease-in-out_infinite] dark:bg-slate-300"></span>
-            </div>
+              <div className="flex gap-1">
+                <span className="size-1.5 rounded-full bg-slate-700 motion-safe:animate-[bounce_1s_ease-in-out_infinite] dark:bg-slate-300"></span>
+                <span className="size-1.5 rounded-full bg-slate-700 motion-safe:animate-[bounce_0.5s_ease-in-out_infinite] dark:bg-slate-300"></span>
+                <span className="size-1.5 rounded-full bg-slate-700 motion-safe:animate-[bounce_1s_ease-in-out_infinite] dark:bg-slate-300"></span>
+              </div>
             </div>
           </div>
         )}
