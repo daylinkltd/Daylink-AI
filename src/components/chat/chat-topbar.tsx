@@ -33,6 +33,8 @@ const ChatTopbar: React.FC<ChatTopbarProps> = ({
   useEffect(() => {
     setCurrentModel(getSelectedModel());
 
+    // Commented out model fetching for now
+    /*
     const fetchModels = async () => {
       const env = process.env.NODE_ENV;
       const apiUrl =
@@ -51,6 +53,7 @@ const ChatTopbar: React.FC<ChatTopbarProps> = ({
     };
 
     fetchModels();
+    */
   }, []);
 
   const handleModelChange = (model: string) => {
@@ -78,6 +81,7 @@ const ChatTopbar: React.FC<ChatTopbarProps> = ({
         </SheetContent>
       </Sheet>
 
+      {/* Model selection dropdown commented out temporarily
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button
@@ -110,6 +114,12 @@ const ChatTopbar: React.FC<ChatTopbarProps> = ({
           )}
         </PopoverContent>
       </Popover>
+      */}
+
+      {/* Display current model name without dropdown */}
+      <div className="text-sm text-muted-foreground">
+        Model: {currentModel || "daylink_ai"}
+      </div>
     </div>
   );
 };
